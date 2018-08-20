@@ -1,0 +1,172 @@
+import textplayer.textPlayer as tP
+#import argparse
+import agents.vivan_agent as vivan_agent
+#import sys
+from snes import SNES
+import pickle
+from timeit import default_timer as timer
+
+
+## below for debugging
+#sys.argv += 'zork1.z5'
+
+game_chosen = 'zenon.z5'
+
+
+def save(generations=None,track_scores=None):
+	if generations in [99,149,199,249,299,349,399]:
+		# save the scores at intervals during the game incase it crashes
+		with open('./completed_runs/zenon/finalruns/run_1/track_scores_zenon_pop50gen500_190818.pkl', 'wb') as f:
+			pickle.dump(track_scores, f)
+
+def save_tokens_labels_words_seen(generations=None,tokens=None,labels=None):	
+	# save the words seen at intervals during the game incase it crashes
+	if generations in [1,100,200,300,400]:
+		# save the scores
+		path = './completed_runs/zenon/finalruns/run_1/saved_pickles/test_word_seen_vectors_at_'+str(generations)+'_.pkl'
+		path2 = './completed_runs/zenon/finalruns/run_1/saved_pickles/test_word_seen_vocabs_at_'+str(generations)+'_.pkl'
+		with open(path, 'wb') as i:
+			pickle.dump(tokens, i)
+
+		with open(path2, 'wb') as k:
+			pickle.dump(labels, k)
+
+
+# start desired game file
+textPlayer = tP.TextPlayer(game_chosen)
+
+track_scores = []
+last_score = 0
+
+# defining population size
+pop_size = 50
+# defining generation size
+generations = 500
+
+# init the agent
+agent = vivan_agent.vivAgent()
+initial_weights = agent.agent_return_weights()
+
+
+state = textPlayer.run()
+last_state = state
+
+# pass variables to SNES
+snes = SNES(initial_weights, 1, pop_size)
+
+start = timer()
+
+for i in range(0, generations):
+	asked = snes.ask()
+	told = []
+	j = 0
+	for asked_j in asked:
+		# use SNES to set the weights of the NN
+		# only run the SNES after 1st generation
+		# pass asked to function in vivan_wordfiles.py everytime
+		# init the neural network in vivan_wordfiles.py
+		# but it is run only when the def_results_for_words is called.
+
+		last_state = state
+		action = agent.take_action(state,asked_j,False)
+		state = textPlayer.execute_command(action)
+		print('::: {0} >>> {1}'.format(action,state))
+		print('This is Population No. {0} of Generation no. {1}'.format(j,i))
+		if textPlayer.get_score() != None:
+			score, possible_score = textPlayer.get_score()
+			# if previous state is equal to current state, then agent reward is -0.2 otherwise reward * 1.2
+			reward = score - last_score
+			if last_state == state:
+				agent_reward = reward - 0.2
+			else:
+				agent_reward = reward * 1.2
+			told.append(agent_reward)
+			last_score = score
+			agent.update(reward)
+			accumulated_reward = agent.get_total_points_earned()
+
+			print  ('Your overall score is {0} and you gained reward of {1} in the last action and agent reward of {2}'.format(accumulated_reward,reward,agent_reward))
+
+			track_scores.append((state,j,i,action,agent_reward,reward,accumulated_reward))
+
+		else:
+			#in case the game cant retrieve the score the engine, set score for that generation to 0
+			score = 0
+			# if previous state is equal to current state, then agent reward is -0.2 otherwise reward * 1.2
+			reward = score - last_score
+			if last_state == state:
+				agent_reward = reward - 0.2
+			else:
+				agent_reward = reward * 1.2
+			told.append(agent_reward)
+			last_score = score
+			agent.update(reward)
+			accumulated_reward = agent.get_total_points_earned()
+			print  ('Your overall score is {0} and you gained reward of {1} in the last action and agent reward of {2}'.format(accumulated_reward,reward,agent_reward))
+			track_scores.append((state,j,i,action,agent_reward,reward,accumulated_reward))
+		j += 1
+	snes.tell(asked,told)
+	save(i,track_scores)
+	tokens, labels = agent.agent_return_models()
+	save_tokens_labels_words_seen(i, tokens, labels)
+
+# set the weights of the NN
+snes_centre_weights = snes.center
+# pass this weights to the nnw file
+agent.pass_snes_centre_weight(snes_centre_weights)
+#nnw.set_weights(snes.center)
+#save(counter,track_scores)
+final_weights = agent.agent_return_weights()
+word_seen = agent.agent_return_word_seen()
+#tokens,labels = agent.agent_return_models()
+
+# save the scores
+with open('./completed_runs/zenon/finalruns/run_1/track_scores_zenon_pop50gen500_190818.pkl', 'wb') as f:
+	pickle.dump(track_scores, f)
+
+# save the final weights
+with open('./completed_runs/zenon/finalruns/run_1/final_weights_zenon_pop50gen500_190818.pkl', 'wb') as g:
+	pickle.dump(final_weights, g)
+
+# save the words seen in the game
+with open('./completed_runs/zenon/finalruns/run_1/words_seen_zenon_pop50gen500_190818.pkl', 'wb') as h:
+	pickle.dump(word_seen, h)
+
+with open('./completed_runs/zenon/finalruns/run_1/test_word_seen_vectors_zenon_pop50gen500_190818.pkl', 'wb') as i:
+	pickle.dump(tokens, i)
+
+with open('./completed_runs/zenon/finalruns/run_1/test_word_seen_vocab_zenon_pop50gen500_190818.pkl', 'wb') as k:
+	pickle.dump(labels, k)
+
+
+end = timer()
+
+print(end - start)
+
+textPlayer.quit()
+
+
+# for debugging
+#if __name__ == '__main__':
+#	manual_play(game_chosen)
+	#gc.set_debug(gc.DEBUG_LEAK)
+#	train_agent(game_chosen)
+
+	# show the dirt ;-)
+	#dump_garbage()
+	#train_agent(game_chosen)
+
+#parser = argparse.ArgumentParser(description='Which game do you want to play?')
+#parser.add_argument('file',help='Specify game name?')
+#function_map = {'manual_play' : manual_play,
+#                'train_agent' : train_agent }
+
+#parser.add_argument('command', choices=function_map.keys(),help = "Type manual_play if you want to manually play the game or " 
+#					" train_agent to train the agent")
+
+# parse arguments
+#args = parser.parse_args()
+#game_chosen = args.file
+#func = function_map[args.command]
+#func(game_chosen)
+# future: add if neuroevolution is on, specify training cycles, population, generation, plot tsne?  
