@@ -3,7 +3,6 @@ Manual_Playing/*
 runs/*
 .idea/*
 runs/*
-.ipynb_checkpoints/*
 .vscode/*
 test/*
 .idea/*
@@ -14,5 +13,4 @@ test/*
 *.csv
 *.sh~
 *.pkl
-*.ipynb
 
