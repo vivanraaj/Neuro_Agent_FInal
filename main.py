@@ -10,21 +10,21 @@ from timeit import default_timer as timer
 ## below for debugging
 #sys.argv += 'zork1.z5'
 
-game_chosen = 'zenon.z5'
+game_chosen = 'detective.z5'
 
 
 def save(generations=None,track_scores=None):
 	if generations in [99,149,199,249,299,349,399]:
 		# save the scores at intervals during the game incase it crashes
-		with open('./completed_runs/zenon/finalruns/run_1/track_scores_zenon_pop50gen500_190818.pkl', 'wb') as f:
+		with open('./completed_runs/detective/finalruns/run_1/track_scores_detective_pop50gen500_210818.pkl', 'wb') as f:
 			pickle.dump(track_scores, f)
 
 def save_tokens_labels_words_seen(generations=None,tokens=None,labels=None):	
 	# save the words seen at intervals during the game incase it crashes
 	if generations in [1,100,200,300,400]:
 		# save the scores
-		path = './completed_runs/zenon/finalruns/run_1/saved_pickles/test_word_seen_vectors_at_'+str(generations)+'_.pkl'
-		path2 = './completed_runs/zenon/finalruns/run_1/saved_pickles/test_word_seen_vocabs_at_'+str(generations)+'_.pkl'
+		path = './completed_runs/detective/finalruns/run_1/saved_pickles/test_word_seen_vectors_at_'+str(generations)+'_.pkl'
+		path2 = './completed_runs/detective/finalruns/run_1/saved_pickles/test_word_seen_vocabs_at_'+str(generations)+'_.pkl'
 		with open(path, 'wb') as i:
 			pickle.dump(tokens, i)
 
@@ -121,21 +121,21 @@ word_seen = agent.agent_return_word_seen()
 #tokens,labels = agent.agent_return_models()
 
 # save the scores
-with open('./completed_runs/zenon/finalruns/run_1/track_scores_zenon_pop50gen500_190818.pkl', 'wb') as f:
+with open('./completed_runs/detective/finalruns/run_1/track_scores_detective_pop50gen500_210818.pkl', 'wb') as f:
 	pickle.dump(track_scores, f)
 
 # save the final weights
-with open('./completed_runs/zenon/finalruns/run_1/final_weights_zenon_pop50gen500_190818.pkl', 'wb') as g:
+with open('./completed_runs/detective/finalruns/run_1/final_weights_detective_pop50gen500_210818.pkl', 'wb') as g:
 	pickle.dump(final_weights, g)
 
 # save the words seen in the game
-with open('./completed_runs/zenon/finalruns/run_1/words_seen_zenon_pop50gen500_190818.pkl', 'wb') as h:
+with open('./completed_runs/detective/finalruns/run_1/words_seen_detective_pop50gen500_210818.pkl', 'wb') as h:
 	pickle.dump(word_seen, h)
 
-with open('./completed_runs/zenon/finalruns/run_1/test_word_seen_vectors_zenon_pop50gen500_190818.pkl', 'wb') as i:
+with open('./completed_runs/detective/finalruns/run_1/test_word_seen_vectors_detective_pop50gen500_210818.pkl', 'wb') as i:
 	pickle.dump(tokens, i)
 
-with open('./completed_runs/zenon/finalruns/run_1/test_word_seen_vocab_zenon_pop50gen500_190818.pkl', 'wb') as k:
+with open('./completed_runs/detective/finalruns/run_1/test_word_seen_vocab_detective_pop50gen500_210818.pkl', 'wb') as k:
 	pickle.dump(labels, k)
 
 

@@ -20,7 +20,9 @@ class Vector():
 		# init the neural network for neuroevolution
 		self.network = Sequential()
 		#self.network.add(Dense(100,input_shape=(100,)))
-		self.network.add(Dense(100,input_shape=(100,),activation = 'elu'))
+		#self.network.add(Dense(100,input_shape=(100,),activation = 'elu'))
+		self.network.add(Dense(100,input_shape=(100,),activation = 'tanh'))
+		
 		#print(self.network.summary())
 
 		self.nnw = NNWeightHelper(self.network)
@@ -225,10 +227,11 @@ class Vector():
 		#changed_word2vec_vectors = self.network.predict(sentence_word_vectors_array)
 
 		# now i add normalize only the inputs
-		changed_word2vec_vectors = self.network.predict(self.normalize(np.array(sentence_word_vectors)))
-		
+		#changed_word2vec_vectors = self.network.predict(self.normalize(np.array(sentence_word_vectors)))
+		changed_word2vec_vectors = self.network.predict(np.array(sentence_word_vectors))
+
 		# and normalize the predictions of the network 
-		norm_changed_word2vec_vectors = self.normalize(changed_word2vec_vectors)
+		#norm_changed_word2vec_vectors = self.normalize(changed_word2vec_vectors)
 
 		i = 0
 
@@ -243,7 +246,7 @@ class Vector():
 			# here it changes
 			#word2vec_vectors[index] = changed_word2vec_vectors[i]
 
-			self.model.vectors[index] = norm_changed_word2vec_vectors[i]
+			self.model.vectors[index] = changed_word2vec_vectors[i]
 
 			# check if the vectors changed?
 			#word_vectors_changed = self.model.vectors[index]
