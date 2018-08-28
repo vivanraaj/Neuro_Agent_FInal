@@ -1,16 +1,18 @@
-# this files deals with all things related to the word vectorsvectors
+# this files deals with all things related to the word vectors
 import word2vec
 from keras import backend as K
 from keras.layers import Dense, Flatten
 from keras.models import Sequential
 from keras_helper import NNWeightHelper
 import numpy as np
+import math
 
 class Vector():
 	def __init__(self):
 		self.number_of_results = 10
 		self.number_analogy_results = 20
 		self.autoAddTags = True
+		# specify the folder of the pretrained word embeddings
 		word2vec_bin_loc = 'scholar/postagged_wikipedia_for_word2vec.bin'
 		self.model = word2vec.load(word2vec_bin_loc)
 		# This is a list of the tags as organized in the text file
@@ -19,12 +21,12 @@ class Vector():
 
 		# init the neural network for neuroevolution
 		self.network = Sequential()
-		#self.network.add(Dense(100,input_shape=(100,)))
-		#self.network.add(Dense(100,input_shape=(100,),activation = 'elu'))
 		self.network.add(Dense(100,input_shape=(100,),activation = 'tanh'))
 		
+		# below for debug
 		#print(self.network.summary())
 
+		
 		self.nnw = NNWeightHelper(self.network)
 		self.weights = self.nnw.get_weights()
 		# keeps track of how many times self.get_results_for_words are called
@@ -32,10 +34,10 @@ class Vector():
 		#keep track of words it has seen
 		self.words_tags_last_seen = {}
 
+	# function to load the POS tag counts into a dictionary
 	def load_tags(self):
 		tag_distribution_loc = 'scholar/postag_distributions_for_scholar.txt'
 		# Loads the part of speech tag counts into a dictionary (words to tag string delimited by '-'s)
-		# Read in the tag information for each word from the file
 		with open(tag_distribution_loc) as f:
 			word_tag_dist = f.read()
 
@@ -48,6 +50,7 @@ class Vector():
 			tag_counts_as_ints = [int(tag_count) for tag_count in tag_counts]
 			self.word_to_tags[word] = tag_counts_as_ints
 
+	# retun
 	def get_verbs(self, noun, snes_weights,tags, number_of_user_results):
 		return self.get_canonical_results_for_nouns(noun, 'VB', 'scholar/canon_verbs.txt', False,snes_weights,tags, number_of_user_results)
 
@@ -122,6 +125,8 @@ class Vector():
 			# run the function below everytime get_results_for_words gets called
 			self.transform_word_vectors(snes_weights,tags)
 
+		# for debug: 
+
 		indexes, metrics = self.model.analogy(pos=positives, neg=negatives, n=self.number_analogy_results)
 		results = self.model.generate_response(indexes, metrics).tolist()
 		self.counter += 1
@@ -134,6 +139,7 @@ class Vector():
 		for word_value in output:
 			words.append(str(word_value[0]))
 		return words
+
 
 	def return_weights(self):
 		return self.weights
@@ -158,20 +164,6 @@ class Vector():
 
 	def nnw_set_weights(self,weights):
 		self.nnw.set_weights(weights)
-
-	## normalization between -1 and 1
-	def normalize(self,x=None):
-		#a = -1
-		#b = 1
-		x = -1 + (((x - x.min()) * 2) / (x.max() - x.min()))
-		return x
-
-	## denormalize
-	def denormalise(self,x=None):
-		#a = -1
-		#b = 1
-		x = (((x + 1) * (x.max() - x.min()))/2) + x.min()
-		return x
 
 	# pass in the asked values
 	def transform_word_vectors(self,snes_weights=None,tags=None):

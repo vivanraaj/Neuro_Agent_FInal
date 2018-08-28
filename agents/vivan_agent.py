@@ -70,6 +70,9 @@ class vivAgent():
 		self.alreadyTried = {}
 		self.success = {}
 		self.total_points_earned = 0
+		# for debug
+		#self.matching_evaluate = []
+		#self.track_generation_no = 0
 
 	def update(self, reward):
 		#if overwritten in a derived class, this 
@@ -156,6 +159,9 @@ class vivAgent():
 		
 		return self.last_action.strip()
 
+
+
+
 	def find_objects(self, narrative):
 		#Assume an object is manipulatable if it appears as a noun in the game text
 		# each time this is run, we set the tags to None		
@@ -172,21 +178,22 @@ class vivAgent():
 
 		return nouns
 
-	def chooseAction(self, game_text,snes_weights):
+
+	def chooseAction(self, game_text, snes_weights):
 
 		if self.packrat_count > 0:
-			self.packrat_count -= 1 #we've done something besides just 'get all'	
+			self.packrat_count -= 1  # we've done something besides just 'get all'
 
 		if self.inventory_count > 0:
-			self.inventory_count -= 1 #we've done something besides just 'get all'	
-		
+			self.inventory_count -= 1  # we've done something besides just 'get all'
+
 		objects = self.find_objects(game_text) + ['']
 
 		# choose a random object of the game text
 		obj = rand.choice(objects)
 
-		#if this is a new state or object, then
-		#initialize the proper dictionary keys
+		# if this is a new state or object, then
+		# initialize the proper dictionary keys
 		if game_text not in self.alreadyTried.keys():
 			self.alreadyTried[game_text] = {}
 
@@ -204,9 +211,9 @@ class vivAgent():
 			for v in self.verb_list:
 				self.success[game_text][obj][v] = 0
 
-		#Check to see whether the last action was successful
-		#If it was, then remember that this was a useful action
-		#('Success' is defined as eliciting a state change.)
+		# Check to see whether the last action was successful
+		# If it was, then remember that this was a useful action
+		# ('Success' is defined as eliciting a state change.)
 		if self.last_state != self.current_state:
 			if self.last_state not in self.success.keys():
 				self.success[self.last_state] = {}
@@ -215,17 +222,18 @@ class vivAgent():
 				for v in self.verb_list:
 					self.success[self.last_state][self.last_object][v] = 0
 			self.success[self.last_state][self.last_object][self.last_verb] = 1
-		
-		#choose the next action
+
+		# choose the next action
 		r = rand.randint(0, 10)
 		if r == 0 and obj != '':
-			#get a verb/preposition/object combo
-			commands = self.getCommands(self.getTryList(game_text, obj,snes_weights), self.find_objects(game_text) + self.inventory_list)
+			# get a verb/preposition/object combo
+			commands = self.getCommands(self.getTryList(game_text, obj, snes_weights),
+			                            self.find_objects(game_text) + self.inventory_list)
 			action = rand.choice(commands)
 			return action
 		else:
-			#get a verb/object combination
-			vrb = self.getVerb(game_text, obj,snes_weights)		
+			# get a verb/object combination
+			vrb = self.getVerb(game_text, obj, snes_weights)
 			self.alreadyTried[game_text][obj][vrb] = 1
 			self.last_verb = vrb
 			self.last_object = obj
@@ -238,6 +246,8 @@ class vivAgent():
 		# (C) has not already been tried in this state with this object	
 
 		tryList = self.getTryList(game_text, input_object, snes_weights)	
+		# for debug
+		#self.track_generation_no += 1
 
 		vrb = rand.choice(tryList)
 		#vrb = tryList[0]
@@ -289,6 +299,7 @@ class vivAgent():
 
 			return sents
 
+
 	def getTryList(self, game_text, input_object,snes_weights):
 
 		#some objects are composed of two words (usually an adjective and an object)
@@ -312,7 +323,13 @@ class vivAgent():
 			for i in range(len(matching_verbs)):
 				matching_verbs[i] = matching_verbs[i][:-3]
 			self.verbs_for_noun[obj] = matching_verbs
-	
+
+		# for debugging
+		#if self.track_generation_no in [100]:
+		#	evaluate = 'wooden'
+		#	self.matching_evaluate = self.vw.get_verbs(evaluate,snes_weights,self.tags,30)
+			
+
 		tryList = []
 
 		#we first try to manipulate the objects extracted from the game text,
