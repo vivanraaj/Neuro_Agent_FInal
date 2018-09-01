@@ -1,6 +1,4 @@
-# Project Title
-
-Neuroagent : An AI agent that plays any parser text-based games.
+# Neuroagent : An AI agent that plays any parser text-based games.
 
 ### Prerequisites
 
