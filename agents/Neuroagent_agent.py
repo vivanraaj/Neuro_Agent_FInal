@@ -1,18 +1,16 @@
 # this file to run the agent
-import scholar.vivan_wordfiles as vw
+import scholar.Neuroagent_wordfiles as vw
 import verbFinder
 import nltk
 import re
 import random as rand
 
-class vivAgent():
+class NeuroAgent():
 	def  __init__(self):	
 		# load the verbs
-		#self.load_verbs()
 		self.manipulation_list = ['throw', 'spray', 'stab', 'slay', 'open', 'pierce', 'thrust', 'exorcise', 'place', 'jump', 'take', 'make', 'read', 'strangle', 'swallow', 'slide', 'wave', 'look', 'dig', 'pull', 'put', 'rub', 'fight', 'ask', 'score', 'apply', 'take', 'knock', 'block', 'kick', 'step', 'break', 'wind', 'blow', 'crack', 'drop', 'blast', 'leave', 'yell', 'skip', 'stare', 'hurl', 'hit', 'kill', 'glass', 'engrave', 'bottle', 'pour', 'feed', 'hatch', 'swim', 'spray', 'melt', 'cross', 'insert', 'lean', 'sit', 'move', 'fasten', 'play', 'drink', 'climb', 'walk', 'consume', 'kiss', 'startle', 'shout', 'close', 'cast', 'set', 'drive', 'lift', 'strike', 'startle', 'catch', 'board', 'speak', 'think', 'get', 'answer', 'tell', 'feel', 'get', 'turn', 'listen', 'read', 'watch', 'wash', 'purchase', 'do', 'sleep', 'fasten', 'drag', 'swing', 'empty', 'switch', 'slip', 'twist', 'shoot', 'slice', 'read', 'burn', 'hop', 'rub', 'ring', 'swipe', 'display', 'scrub', 'hug', 'operate', 'touch', 'sit', 'sweep', 'fix', 'walk', 'crack', 'skip']
 		self.manipulation_list += ['wait', 'point', 'light', 'unlight', 'use', 'ignite', 'wear', 'remove', 'unlock', 'lock', 'examine', 'inventory', '']
 		# the games recognizes these movement commands -> https://gamefaqs.gamespot.com/pc/564446-zork-i/faqs/20848
-		# vivan added in and out commands
 		self.navigation_list = ['north', 'south', 'west', 'east', 'northwest', 'southwest', 'northeast', 'southeast', 'up', 'down', 'enter', 'exit', 'drop','in','out']
 		self.verb_list = self.manipulation_list + self.navigation_list
 	
@@ -25,6 +23,7 @@ class vivAgent():
 		self.preposition_list = ['with', 'in', 'at', 'above', 'under']
 
 		print("Loading word vectors")
+		# initialize the Neuroagnet_wordfiles class
 		self.vw = vw.Vector()
 
 		self.verbFinder = verbFinder.verbFinder()
@@ -45,8 +44,6 @@ class vivAgent():
 
 			self.VPD[v] = preps
 
-		# load the word vectors
-		#self.load_wordvectors()
 		self.last_state = ''
 		self.current_state = ''
 		self.last_narrative = ''
@@ -70,31 +67,48 @@ class vivAgent():
 		self.alreadyTried = {}
 		self.success = {}
 		self.total_points_earned = 0
-		# for debug
-		#self.matching_evaluate = []
-		#self.track_generation_no = 0
+		# for debugging
+		# self.matching_evaluate = []
+		# self.track_generation_no = 0
 
 	def update(self, reward):
-		#if overwritten in a derived class, this 
-		#function should still be sure to update
-		#total_points_earned
+		"""	
+		function to update total_points_earned
+		"""
 		self.total_points_earned += reward
 
 	def get_total_points_earned(self):
-		#useful for writing data files that track 
-		#obtained reward over time
+		"""	
+		function to return total points earned
+		"""
 		return self.total_points_earned
 
 	def agent_return_weights(self):
+		"""	
+		function to return the weights of the neural network structure
+		"""
 		return self.vw.return_weights()
 
 	def agent_return_word_seen(self):
+		"""	
+		function to return the dictionary that contains the words seen in the game state and its index number
+		"""
 		return self.vw.return_words_tags_last_seen()
 
 	def agent_return_models(self): 
+		"""	
+		function to return the words and its correspending word vectors
+		"""
 		return self.vw.return_trained_word2vec()
 
-	def take_action(self, narrative, snes_weights, evaluation_flag=False):
+	def take_action(self, narrative, snes_weights):
+		"""	
+		function to return the action command
+
+		Args:
+				narrative (str): game state text description
+				snes weights (arr): weights of the neural network
+		"""
 			
 		self.game_steps += 1
 
@@ -161,8 +175,11 @@ class vivAgent():
 
 
 
-
 	def find_objects(self, narrative):
+		"""	
+		function to return the nouns in the game state text descriptionn
+		"""
+
 		#Assume an object is manipulatable if it appears as a noun in the game text
 		# each time this is run, we set the tags to None		
 		tokens = nltk.word_tokenize(narrative)
@@ -180,6 +197,9 @@ class vivAgent():
 
 
 	def chooseAction(self, game_text, snes_weights):
+		"""	
+		function to choose the desired action
+		"""
 
 		if self.packrat_count > 0:
 			self.packrat_count -= 1  # we've done something besides just 'get all'
@@ -228,7 +248,7 @@ class vivAgent():
 		if r == 0 and obj != '':
 			# get a verb/preposition/object combo
 			commands = self.getCommands(self.getTryList(game_text, obj, snes_weights),
-			                            self.find_objects(game_text) + self.inventory_list)
+										self.find_objects(game_text) + self.inventory_list)
 			action = rand.choice(commands)
 			return action
 		else:
@@ -240,24 +260,25 @@ class vivAgent():
 			return vrb + ' ' + obj
 
 	def getVerb(self, game_text, input_object, snes_weights):
+		"""	
 		#returns a verb that:
 		# (A) satisfies the active search criterion
 		# (B) is in the agent's verb_list
 		# (C) has not already been tried in this state with this object	
+		"""
 
 		tryList = self.getTryList(game_text, input_object, snes_weights)	
-		# for debug
-		#self.track_generation_no += 1
-
 		vrb = rand.choice(tryList)
-		#vrb = tryList[0]
 
 		return vrb
 		
-	#using the dictionary, return a list of commands
-	# so like saying get house with room
+
 	def getCommands(self):
 
+		"""	
+		using the dictionary, return a list of commands
+		so like saying get house with room
+		"""
 		sents = []
 		#Verb
 		for v in self.verb_list:
@@ -277,33 +298,39 @@ class vivAgent():
 
 	#using the dictionary, return a list of commands
 	def getCommands(self,verbs,objects):
+		"""	
+		using the dictionary, return a list of commands
+		so like saying get house with room
+		"""
 
-			if '' in verbs:
-					verbs.remove('')
-			if '' in objects:
-					objects.remove('')
+		if '' in verbs:
+				verbs.remove('')
+		if '' in objects:
+				objects.remove('')
 
-			sents = []
+		sents = []
 
-			for v in verbs:
-					#Noun
-					for obj in objects:
-							#Dictionary of prepositions according to verbs
-							for key in self.VPD.keys():
-									#set or list of prepositions
-									for prep in self.VPD[key]:
-											#second Noun
-											for obj2 in objects:
-													sentence = "{} {} {} {}". format(v, obj, prep, obj2)
-													sents.append(sentence)
+		for v in verbs:
+				#Noun
+				for obj in objects:
+						#Dictionary of prepositions according to verbs
+						for key in self.VPD.keys():
+								#set or list of prepositions
+								for prep in self.VPD[key]:
+										#second Noun
+										for obj2 in objects:
+												sentence = "{} {} {} {}". format(v, obj, prep, obj2)
+												sents.append(sentence)
 
-			return sents
+		return sents
 
 
 	def getTryList(self, game_text, input_object,snes_weights):
+		"""	
+		some objects are composed of two words (usually an adjective and an object)
+		If that is the case, then consider only the second word out of the pair
+		"""
 
-		#some objects are composed of two words (usually an adjective and an object)
-		#If that is the case, then consider only the second word out of the pair
 		obj = input_object
 		if len(input_object.split()) > 1:
 			obj = input_object.split()[-1]
@@ -364,4 +391,7 @@ class vivAgent():
 		return tryList
 
 	def pass_snes_centre_weight(self,snes_centre_weights):
+		"""	
+		function to pass the new weights of the neural network to the neural network structure
+		"""
 		self.vw.nnw_set_weights(snes_centre_weights)

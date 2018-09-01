@@ -18,7 +18,6 @@ class Vector():
 		# This is a list of the tags as organized in the text file
 		self.tag_list = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS', 'LS', 'MD', 'NN', 'NNS', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$', 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB']
 		self.load_tags()
-
 		# init the neural network for neuroevolution
 		self.network = Sequential()
 		self.network.add(Dense(100,input_shape=(100,),activation = 'tanh'))
@@ -34,8 +33,10 @@ class Vector():
 		#keep track of words it has seen
 		self.words_tags_last_seen = {}
 
-	# function to load the POS tag counts into a dictionary
 	def load_tags(self):
+		"""	
+		function to load the POS tag counts into a dictionary
+		"""
 		tag_distribution_loc = 'scholar/postag_distributions_for_scholar.txt'
 		# Loads the part of speech tag counts into a dictionary (words to tag string delimited by '-'s)
 		with open(tag_distribution_loc) as f:
@@ -50,7 +51,6 @@ class Vector():
 			tag_counts_as_ints = [int(tag_count) for tag_count in tag_counts]
 			self.word_to_tags[word] = tag_counts_as_ints
 
-	# retun
 	def get_verbs(self, noun, snes_weights,tags, number_of_user_results):
 		return self.get_canonical_results_for_nouns(noun, 'VB', 'scholar/canon_verbs.txt', False,snes_weights,tags, number_of_user_results)
 
@@ -96,8 +96,10 @@ class Vector():
 			return final_results[0:number_of_user_results]
 		return final_results
 
-	# Return the analogy results for a list of words (input: "king -man woman")
 	def analogy(self, words_string,snes_weights,tags):
+		"""	
+		Return the analogy results for a list of words (input: "king -man woman")
+		"""
 		positives, negatives = self.get_positives_and_negatives(words_string.split())
 		return self.get_results_for_words(positives, negatives,snes_weights,tags)
 
@@ -112,20 +114,16 @@ class Vector():
 				positives.append(word_arg)
 		return positives, negatives
 
-	# Returns the results of entering a list of positive and negative words into word2vec
 	def get_results_for_words(self, positives, negatives,snes_weights,tags):
-		# keeps track of number of times this function is called
-		# for first 15 tries, we dont use the function but use the original pretrained word vector
-		# to evaluate how good it is
-		# why 15? 15 is the number of verb combination in canon_verbs.txt
-		# what im doing below is as it goes through 15 word combinations in canon_verbs,
-		# making sure it evalues each combination with a state and then change the word vectos values
+		"""	
+		Returns the results of entering a list of positive and negative words into word2vec
+		"""
 
+		# for first 14 times, we dont use fine-tune the embeddings but use the original pretrained word vector
+		# why 14? 15 is the number of verb combination in canon_verbs.txt
 		if self.counter > 14:
 			# run the function below everytime get_results_for_words gets called
 			self.transform_word_vectors(snes_weights,tags)
-
-		# for debug: 
 
 		indexes, metrics = self.model.analogy(pos=positives, neg=negatives, n=self.number_analogy_results)
 		results = self.model.generate_response(indexes, metrics).tolist()
@@ -133,8 +131,10 @@ class Vector():
 
 		return self.format_output(results)
 
-	# Changes the output from a list of tuples (u'man', 0.816015154188), ... to a list of single words
 	def format_output(self, output):
+		"""	
+		Changes the output from a list of tuples (u'man', 0.816015154188), ... to a list of single words
+		"""
 		words = []
 		for word_value in output:
 			words.append(str(word_value[0]))
@@ -148,16 +148,15 @@ class Vector():
 		return self.words_tags_last_seen
 
 	def return_trained_word2vec(self):
-		# save the models seen in the game
+		"""	
+		save the models seen in the game
+		"""
 		labels = []
 		tokens = []
 
 		for y in self.words_tags_last_seen:
-			#label = self.words_tags_last_seen[y]
 			new_token = self.model.get_vector(y)						
-			#token = self.model.vectors[label]
 			tokens.append(new_token)
-			#new_label = self.model.vocab[label]
 			labels.append(y)
 
 		return tokens,labels
@@ -165,12 +164,12 @@ class Vector():
 	def nnw_set_weights(self,weights):
 		self.nnw.set_weights(weights)
 
-	# pass in the asked values
 	def transform_word_vectors(self,snes_weights=None,tags=None):
+		"""	
+		pass the previous vectors for the word to the neuroevolution algorithm
+		and send the new vectors back to the word2vec file
+		"""
 		self.nnw.set_weights(snes_weights)
-		# get the word vectors for the state it has seen
-		# code to show based on state, how we pass these vectors to neural network.
-		# we need to use the index instead of the word as some words dont appear in word2vec
 
 		sentence_sequences = []
 		sentence_word_vectors = []
@@ -179,17 +178,14 @@ class Vector():
 		# keep track of errors
 		# error = 0
 		# error_list = []
-		# keep track of the words it has seen
 
 		# receive the words from tags code
 		for words in tags:
 			try:
 				x =(words[0].lower()+'_'+words[1])
-				# print(x)
 				# get the vector of the words first 
 				# then get the index of the word
 				# as the word might not have the vectors.
-				# word_indexes = word_vectors.ix(x)
 				# below we get the vectors of the words
 	
 				sentence_word_vectors.append(self.model.get_vector(x))
@@ -198,11 +194,7 @@ class Vector():
 				else:
 					self.words_tags_last_seen[x] = self.model.ix(x)
 
-				# BELOW FOR DEBUG
-				# CHECK WHAT word depend on the vector
-				# check_if_correct_word = self.model.get_word(narrative_vectors)
 				# below we get the index of the words
-
 				sentence_sequences.append(index)
 
 			except:
@@ -212,37 +204,14 @@ class Vector():
 				pass
 
 		# convert from list to array
-		# specify that its float
-		# below for debug
-		#sentence_word_vectors_array = np.array(sentence_word_vectors,dtype='f')
-		#del sentence_word_vectors_array
-		#changed_word2vec_vectors = self.network.predict(sentence_word_vectors_array)
 
-		# now i add normalize only the inputs
-		#changed_word2vec_vectors = self.network.predict(self.normalize(np.array(sentence_word_vectors)))
 		changed_word2vec_vectors = self.network.predict(np.array(sentence_word_vectors))
-
-		# and normalize the predictions of the network 
-		#norm_changed_word2vec_vectors = self.normalize(changed_word2vec_vectors)
 
 		i = 0
 
 		for index in sentence_sequences:
-			#for debug
-			#print(index)
-			#desired_word = word_vectors.vocab[index] 
-			#print(desired_word)
-			#debug word2vec
-			#current_word_vector = self.model.vectors[index]
-			#to_change = changed_word2vec_vectors[i]
-			# here it changes
-			#word2vec_vectors[index] = changed_word2vec_vectors[i]
-
 			self.model.vectors[index] = changed_word2vec_vectors[i]
 
 			# check if the vectors changed?
 			#word_vectors_changed = self.model.vectors[index]
 			i += 1
-
-		# take current vectors and use SNES to predict new vectors
-		# send the new vectors back to the word2vec file

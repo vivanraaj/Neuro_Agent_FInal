@@ -1,3 +1,8 @@
+###################################################################################################
+# This set of codes has been adaptedfrom https://github.com/danielricks/textplayer
+###################################################################################################
+
+
 import os
 import textplayer.textPlayer as tp
 '''

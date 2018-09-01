@@ -1,6 +1,8 @@
-__author__ = 'Tom Schaul, tom@idsia.ch, Spyridon Samothrakis ssamot@essex.ac.uk'
+##########################################################################################
+# This set of codes has been adapted with permission from https://github.com/ssamot/infoGA
+##########################################################################################
 
-## ssamot hacked ask/tell interface, algorithmic implementation is from Tom Schaul
+# __author__ = 'Tom Schaul, tom@idsia.ch, Spyridon Samothrakis ssamot@essex.ac.uk'
 
 from numpy import dot, exp, log, sqrt, ones, zeros_like, Inf, argmax
 import numpy as np
@@ -63,7 +65,6 @@ class SNES():
 
 if __name__ == "__main__":
 
-
     # 100-dimensional ellipsoid function
     dim = 20
     A = np.array([np.power(1000, 2 * i / (dim - 1.)) for i in range(dim)])
@@ -76,7 +77,6 @@ if __name__ == "__main__":
         #print asked
         told = [elli(a) for a in asked ]
         snes.tell(asked,told)
-
 
     # # example run
     # print SNES(elli, ones(dim), verbose=True)

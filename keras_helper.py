@@ -1,3 +1,7 @@
+##########################################################################################
+# This set of codes has been adapted with permission from https://github.com/ssamot/infoGA
+##########################################################################################
+
 import keras.backend as K
 import numpy as np
 

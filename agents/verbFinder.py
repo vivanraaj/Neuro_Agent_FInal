@@ -1,3 +1,7 @@
+#######################################################################################
+# This set of codes has been adapted from https://github.com/danielricks/BYU-Agent-2016
+#######################################################################################
+
 import pickle
 
 class verbFinder:

@@ -1,3 +1,8 @@
+###################################################################################################
+# This set of codes has been adaptedfrom https://github.com/danielricks/textplayer
+###################################################################################################
+
+
 import os, sys, signal, time, re
 from signal import signal, SIGPIPE, SIG_DFL
 from subprocess import PIPE, Popen
